@@ -26,11 +26,14 @@ import logging
 import traceback
 import random
 
+
 from shadowsocks import cryptor, eventloop, shell, common
 from shadowsocks.common import parse_header, onetimeauth_verify, \
     onetimeauth_gen, ONETIMEAUTH_BYTES, ONETIMEAUTH_CHUNK_BYTES, \
     ONETIMEAUTH_CHUNK_DATA_LEN, ADDRTYPE_AUTH
-
+    
+import socks
+socks.set_default_proxy(socks.SOCKS5, "127.0.0.1", 8889)
 # we clear at most TIMEOUTS_CLEAN_SIZE timeouts each time
 TIMEOUTS_CLEAN_SIZE = 512
 
@@ -401,7 +404,7 @@ class TCPRelayHandler(object):
             if common.to_str(sa[0]) in self._forbidden_iplist:
                 raise Exception('IP %s is in forbidden list, reject' %
                                 common.to_str(sa[0]))
-        remote_sock = socket.socket(af, socktype, proto)
+        remote_sock = socks.socksocket(af, socktype, proto)
         self._remote_sock = remote_sock
         self._fd_to_handlers[remote_sock.fileno()] = self
         remote_sock.setblocking(False)
@@ -749,7 +752,7 @@ class TCPRelay(object):
             raise Exception("can't get addrinfo for %s:%d" %
                             (listen_addr, listen_port))
         af, socktype, proto, canonname, sa = addrs[0]
-        server_socket = socket.socket(af, socktype, proto)
+        server_socket = socks.socksocket(af, socktype, proto)
         server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server_socket.bind(sa)
         server_socket.setblocking(False)
